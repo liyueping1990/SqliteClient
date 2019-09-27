@@ -103,7 +103,7 @@ int SqliteClient::GetData(const char * sql_str, DataListPtr& data_list)
 	}
 
 	sqlite3_free_table(datas);
-	sqlite3_free(err_msg);
+	//sqlite3_free(err_msg);
 	return error;
 }
 
