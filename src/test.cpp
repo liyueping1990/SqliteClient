@@ -11,6 +11,5 @@ int main(int argc, char* argv[])
 
 	DataListPtr data_list;
 	sqlite_client->GetAllData("client", data_list);
-	sqlite_client->GetData("select * from client", data_list);
 	return result;
 }

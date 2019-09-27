@@ -1,4 +1,9 @@
+//#ifdef WIN32
+//#define SQLITE_API __declspec(dllexport)
+//#endif // WIN32
+
 #include "SqliteClient.h"
+#include "sqlite3.h"
 
 SqliteClient::SqliteClient()
 {
@@ -9,7 +14,7 @@ SqliteClient::~SqliteClient()
 {
 	if (sql_db_ != nullptr)
 	{
-		sqlite3_close(sql_db_);
+		sqlite3_close((sqlite3*)sql_db_);
 		sql_db_ = nullptr;
 	}
 }
@@ -22,14 +27,16 @@ int SqliteClient::OpenDb(const char * db_name)
 		return result;
 	}
 
-	result = sqlite3_open(db_name, &sql_db_);
+	sqlite3* sqlite3_db = nullptr;
+	result = sqlite3_open(db_name, &sqlite3_db);
 	if (result != 0)
 	{
-		printf("can't open db: %s\r\n", sqlite3_errmsg(sql_db_));
-		sqlite3_close(sql_db_);
+		printf("can't open db: %s\r\n", sqlite3_errmsg(sqlite3_db));
+		sqlite3_close(sqlite3_db);
 	} 
 	else
 	{
+		sql_db_ = sqlite3_db;
 		db_name_ = db_name;
 		printf("db open successfully!\r\n");
 	}
@@ -41,7 +48,8 @@ int SqliteClient::CloseDb()
 	printf("close db!\r\n");
 	if (sql_db_)
 	{
-		sqlite3_close(sql_db_);
+		sqlite3* sqlite3_db = (sqlite3*)sql_db_;
+		sqlite3_close(sqlite3_db);
 		sql_db_ = nullptr;
 	}
 	return 0;
@@ -75,10 +83,11 @@ int SqliteClient::GetData(const char * sql_str, DataListPtr& data_list)
 	int   rows = 0;
 	int   cols = 0;
 
-	int error = sqlite3_get_table(sql_db_, sql_str, &datas, &rows, &cols, &err_msg);
+	sqlite3* sqlite3_db = (sqlite3*)sql_db_;
+	int error = sqlite3_get_table(sqlite3_db, sql_str, &datas, &rows, &cols, &err_msg);
 	if (error != 0)
 	{
-		printf("err_msg:%s", err_msg);
+		last_error_ = err_msg;
 		sqlite3_free(err_msg);
 	}
 	else
@@ -103,26 +112,32 @@ int SqliteClient::GetData(const char * sql_str, DataListPtr& data_list)
 	}
 
 	sqlite3_free_table(datas);
-	//sqlite3_free(err_msg);
 	return error;
 }
 
 int SqliteClient::GetAllData(const char * tbl_name, DataListPtr & data_list)
 {
 	char temp[32] = { 0 };
-	sprintf(temp, "select *from %s", tbl_name);
+	sprintf_s(temp, "select *from %s", tbl_name);
 	return GetData(temp, data_list);
+}
+
+std::string SqliteClient::GetLastError()
+{
+	return last_error_;
 }
 
 int SqliteClient::ExecSql(const char * sql_str)
 {
 	char* err_msg = nullptr;
-	int error = sqlite3_exec(sql_db_, sql_str, nullptr, nullptr, &err_msg);
+
+	sqlite3* sqlite3_db = (sqlite3*)sql_db_;
+	int error = sqlite3_exec(sqlite3_db, sql_str, nullptr, nullptr, &err_msg);
 	if (error != 0)
 	{
-		printf("err_msg:%s", err_msg);
+		last_error_ = err_msg;
+		sqlite3_free(err_msg);
 	}
-
-	sqlite3_free(err_msg);
+	
 	return error;
 }
