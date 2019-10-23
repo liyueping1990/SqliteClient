@@ -9,16 +9,15 @@
 #define DataList    std::list<KeyValuePtr>
 #define DataListPtr std::shared_ptr<DataList>
 
-//#ifdef WIN32
-//#ifndef SQLITE_API
-//#define SQLITE_API __declspec(dllimport)
-//#endif // WIN32
-//
-//#else // Linux
-//#define SQLITE_API
-//#endif // WIN32
+#ifdef WIN32
+#ifndef SQLITE_API
+#define SQLITE_API __declspec(dllimport)
+#endif // SQLITE_API
+#else // Linux
+#define SQLITE_API
+#endif // WIN32
 
-class SqliteClient
+class SQLITE_API SqliteClient
 {
 public:
 	typedef std::shared_ptr<SqliteClient> Ptr;

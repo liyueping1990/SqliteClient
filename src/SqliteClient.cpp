@@ -1,6 +1,6 @@
-//#ifdef WIN32
-//#define SQLITE_API __declspec(dllexport)
-//#endif // WIN32
+#ifdef WIN32
+#define SQLITE_API __declspec(dllexport)
+#endif // WIN32
 
 #include "SqliteClient.h"
 #include "sqlite3.h"
